@@ -1,0 +1,28 @@
+# Rust
+/target/
+/clob-engine/backend/target/
+**/*.rs.bk
+Cargo.lock
+
+# Node.js
+**/node_modules/
+**/dist/
+**/build/
+.npm
+.eslintcache
+.stylelintcache
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

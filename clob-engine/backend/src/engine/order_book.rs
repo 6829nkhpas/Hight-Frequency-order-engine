@@ -166,30 +166,38 @@ impl OrderBook {
 
             // Match against orders at this level
             while !incoming.is_filled() && !level.is_empty() {
-                let maker = level.front_mut().unwrap();
+                // Get the front order info without holding the borrow
+                let (maker_id, maker_remaining) = {
+                    let maker = level.orders.front().unwrap();
+                    (maker.id, maker.remaining_quantity)
+                };
 
                 // Calculate fill quantity
-                let fill_qty = incoming.remaining_quantity.min(maker.remaining_quantity);
+                let fill_qty = incoming.remaining_quantity.min(maker_remaining);
 
                 // Create trade (execute at maker's price)
                 let trade = Trade::new(
                     incoming.id,
-                    maker.id,
+                    maker_id,
                     best_price, // Trade at the maker's price
                     fill_qty,
                     incoming.side,
                 );
 
-                // Update quantities
+                // Update incoming order
                 incoming.fill(fill_qty);
-                maker.fill(fill_qty);
 
-                // Update level total
+                // Update maker order and level
+                {
+                    let maker = level.orders.front_mut().unwrap();
+                    maker.fill(fill_qty);
+                }
                 level.total_quantity -= fill_qty;
 
                 // Remove filled maker order
-                if maker.is_filled() {
-                    level.pop_front();
+                let maker_filled = level.orders.front().map(|o| o.is_filled()).unwrap_or(false);
+                if maker_filled {
+                    level.orders.pop_front();
                 }
 
                 trades.push(trade);
