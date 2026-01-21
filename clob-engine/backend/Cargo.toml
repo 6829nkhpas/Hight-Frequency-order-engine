@@ -1,0 +1,40 @@
+[package]
+name = "clob-backend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.40", features = ["full"] }
+
+# Web framework
+axum = { version = "0.7", features = ["ws"] }
+axum-extra = { version = "0.9", features = ["typed-header"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio", "postgres", "uuid", "chrono", "rust_decimal"] }
+
+# Types
+uuid = { version = "1.10", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+rust_decimal = { version = "1.35", features = ["serde", "serde-with-str"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Futures
+futures = "0.3"
+
+[dev-dependencies]
+tokio-test = "0.4"
