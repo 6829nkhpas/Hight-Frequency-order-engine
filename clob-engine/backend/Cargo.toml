@@ -38,3 +38,4 @@ futures = "0.3"
 
 [dev-dependencies]
 tokio-test = "0.4"
+rust_decimal_macros = "1.35"
