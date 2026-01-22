@@ -658,8 +658,8 @@ MIT License - See [LICENSE](LICENSE) file for details.
 **Your Name**  
 Rust Backend Developer | Financial Systems Engineer
 
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your Profile](https://linkedin.com/in/yourprofile)
+- GitHub: [@yourusername](https://github.com/6829nkhpas)
+- LinkedIn: [Your Profile](https://linkedin.com/in/namankh)
 - Email: your.email@example.com
 
 ---
