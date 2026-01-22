@@ -30,6 +30,8 @@ export const PerformanceDashboard: React.FC = () => {
         setMetrics(null);
 
         try {
+            console.log('🚀 Starting simulation with', numOrders, 'orders...');
+
             const response = await fetch('http://localhost:3000/api/simulation', {
                 method: 'POST',
                 headers: {
@@ -40,9 +42,13 @@ export const PerformanceDashboard: React.FC = () => {
                 }),
             });
 
+            console.log('📡 Response status:', response.status, response.statusText);
+
             const data = await response.json();
+            console.log('📊 Response data:', data);
 
             if (data.success && data.metrics) {
+                console.log('✅ Metrics received:', data.metrics);
                 setMetrics(data.metrics);
 
                 // Add to historical data
@@ -54,9 +60,13 @@ export const PerformanceDashboard: React.FC = () => {
                         latency: data.metrics.avg_latency_us,
                     },
                 ]);
+            } else {
+                console.error('❌ Invalid response structure:', data);
+                alert('Simulation completed but data format is invalid. Check console for details.');
             }
         } catch (err) {
-            console.error('Simulation failed:', err);
+            console.error('❌ Simulation failed:', err);
+            alert(`Simulation failed: ${err instanceof Error ? err.message : 'Unknown error'}. Check console for details.`);
         } finally {
             setIsRunning(false);
         }
