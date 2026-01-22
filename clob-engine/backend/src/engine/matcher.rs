@@ -2,6 +2,7 @@
 
 use crate::engine::order::{Order, OrderRequest, Trade};
 use crate::engine::order_book::OrderBook;
+use std::sync::Arc;
 use tokio::sync::{broadcast, mpsc};
 
 /// Events emitted by the matching engine
@@ -10,12 +11,16 @@ pub enum EngineEvent {
     /// A trade was executed
     Trade(Trade),
     /// Order book state changed
-    OrderBookUpdate {
-        best_bid: Option<rust_decimal::Decimal>,
-        best_ask: Option<rust_decimal::Decimal>,
-        bid_depth: Vec<(rust_decimal::Decimal, rust_decimal::Decimal)>,
-        ask_depth: Vec<(rust_decimal::Decimal, rust_decimal::Decimal)>,
-    },
+    OrderBookUpdate(OrderBookSnapshot),
+}
+
+/// Snapshot of the order book state
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct OrderBookSnapshot {
+    pub best_bid: Option<rust_decimal::Decimal>,
+    pub best_ask: Option<rust_decimal::Decimal>,
+    pub bid_depth: Vec<(rust_decimal::Decimal, rust_decimal::Decimal)>,
+    pub ask_depth: Vec<(rust_decimal::Decimal, rust_decimal::Decimal)>,
 }
 
 /// The matching engine processes orders and generates trades
@@ -26,6 +31,8 @@ pub struct MatchingEngine {
     order_rx: mpsc::Receiver<OrderRequest>,
     /// Channel to broadcast engine events (trades, updates)
     event_tx: broadcast::Sender<EngineEvent>,
+    /// Shared current state for REST API queries
+    current_state: Arc<tokio::sync::RwLock<OrderBookSnapshot>>,
     /// Number of depth levels to include in updates
     depth_levels: usize,
 }
@@ -36,11 +43,13 @@ impl MatchingEngine {
         symbol: impl Into<String>,
         order_rx: mpsc::Receiver<OrderRequest>,
         event_tx: broadcast::Sender<EngineEvent>,
+        current_state: Arc<tokio::sync::RwLock<OrderBookSnapshot>>,
     ) -> Self {
         Self {
             order_book: OrderBook::new(symbol),
             order_rx,
             event_tx,
+            current_state,
             depth_levels: 10,
         }
     }
@@ -91,18 +100,21 @@ impl MatchingEngine {
     }
 
     /// Broadcast current order book state
-    fn broadcast_book_update(&self) {
-        let update = EngineEvent::OrderBookUpdate {
+    fn broadcast_book_update(&mut self) {
+        let snapshot = OrderBookSnapshot {
             best_bid: self.order_book.best_bid(),
             best_ask: self.order_book.best_ask(),
             bid_depth: self.order_book.bid_depth(self.depth_levels),
             ask_depth: self.order_book.ask_depth(self.depth_levels),
         };
 
-        let _ = self.event_tx.send(update);
-    }
+        // Update shared state for REST API
+        if let Ok(mut state) = self.current_state.try_write() {
+            *state = snapshot.clone();
+        }
 
-    /// Get current order book statistics
+        let _ = self.event_tx.send(EngineEvent::OrderBookUpdate(snapshot));
+    }
     #[allow(dead_code)]
     pub fn stats(&self) -> EngineStats {
         EngineStats {
@@ -158,11 +170,21 @@ impl EngineBuilder {
         let (order_tx, order_rx) = mpsc::channel(self.order_buffer_size);
         let (event_tx, _) = broadcast::channel(self.event_buffer_size);
 
-        let engine = MatchingEngine::new(self.symbol, order_rx, event_tx.clone());
+        let initial_snapshot = OrderBookSnapshot {
+            best_bid: None,
+            best_ask: None,
+            bid_depth: Vec::new(),
+            ask_depth: Vec::new(),
+        };
+
+        let current_state = Arc::new(tokio::sync::RwLock::new(initial_snapshot));
+
+        let engine = MatchingEngine::new(self.symbol, order_rx, event_tx.clone(), current_state.clone());
 
         let handle = EngineHandle {
             order_tx,
             event_tx,
+            current_state,
         };
 
         (engine, handle)
@@ -176,6 +198,8 @@ pub struct EngineHandle {
     pub order_tx: mpsc::Sender<OrderRequest>,
     /// Subscribe to engine events
     pub event_tx: broadcast::Sender<EngineEvent>,
+    /// Current order book snapshot
+    pub current_state: Arc<tokio::sync::RwLock<OrderBookSnapshot>>,
 }
 
 impl EngineHandle {

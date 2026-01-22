@@ -1,4 +1,4 @@
-import { MarketMessage } from '../types/market';
+import type { MarketMessage } from '../types/market';
 
 type MessageCallback = (msg: MarketMessage) => void;
 

@@ -117,28 +117,12 @@ pub async fn health_check() -> impl IntoResponse {
 pub async fn get_order_book(
     State(handle): State<Arc<EngineHandle>>,
 ) -> impl IntoResponse {
-    // Subscribe to get latest state
-    let mut rx = handle.subscribe();
-
-    // Try to get latest order book
-    // Note: This is a simplified approach; in production you'd cache the state
-    match tokio::time::timeout(std::time::Duration::from_millis(100), rx.recv()).await {
-        Ok(Ok(crate::engine::EngineEvent::OrderBookUpdate {
-            best_bid,
-            best_ask,
-            bid_depth,
-            ask_depth,
-        })) => Json(serde_json::json!({
-            "best_bid": best_bid.map(|p| p.to_string()),
-            "best_ask": best_ask.map(|p| p.to_string()),
-            "bids": bid_depth.into_iter().map(|(p, q)| [p.to_string(), q.to_string()]).collect::<Vec<_>>(),
-            "asks": ask_depth.into_iter().map(|(p, q)| [p.to_string(), q.to_string()]).collect::<Vec<_>>(),
-        })),
-        _ => Json(serde_json::json!({
-            "best_bid": null,
-            "best_ask": null,
-            "bids": [],
-            "asks": [],
-        })),
-    }
+    let snapshot = handle.current_state.read().await;
+    
+    Json(serde_json::json!({
+        "best_bid": snapshot.best_bid.map(|p| p.to_string()),
+        "best_ask": snapshot.best_ask.map(|p| p.to_string()),
+        "bids": snapshot.bid_depth.iter().map(|(p, q)| [p.to_string(), q.to_string()]).collect::<Vec<_>>(),
+        "asks": snapshot.ask_depth.iter().map(|(p, q)| [p.to_string(), q.to_string()]).collect::<Vec<_>>(),
+    }))
 }

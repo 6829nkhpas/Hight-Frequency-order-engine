@@ -69,19 +69,14 @@ async fn handle_socket(socket: WebSocket, handle: Arc<EngineHandle>) {
                             side: trade.taker_side.to_string(),
                             timestamp: trade.timestamp.timestamp_millis(),
                         },
-                        EngineEvent::OrderBookUpdate {
-                            best_bid,
-                            best_ask,
-                            bid_depth,
-                            ask_depth,
-                        } => WsMessage::OrderBook {
-                            best_bid: best_bid.map(|p| p.to_string()),
-                            best_ask: best_ask.map(|p| p.to_string()),
-                            bids: bid_depth
+                        EngineEvent::OrderBookUpdate(snapshot) => WsMessage::OrderBook {
+                            best_bid: snapshot.best_bid.map(|p| p.to_string()),
+                            best_ask: snapshot.best_ask.map(|p| p.to_string()),
+                            bids: snapshot.bid_depth
                                 .into_iter()
                                 .map(|(p, q)| [p.to_string(), q.to_string()])
                                 .collect(),
-                            asks: ask_depth
+                            asks: snapshot.ask_depth
                                 .into_iter()
                                 .map(|(p, q)| [p.to_string(), q.to_string()])
                                 .collect(),

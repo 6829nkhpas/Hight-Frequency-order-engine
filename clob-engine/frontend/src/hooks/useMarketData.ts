@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { wsService } from '../services/websocket';
-import { MarketMessage, OrderBookState, Trade } from '../types/market';
+import type { MarketMessage, OrderBookState, Trade } from '../types/market';
 
 export function useMarketData() {
     const [orderBook, setOrderBook] = useState<OrderBookState>({

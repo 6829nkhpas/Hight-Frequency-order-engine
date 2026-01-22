@@ -18,20 +18,16 @@ pub struct MarketSnapshot {
 /// Convert engine event to market snapshot format
 pub fn engine_event_to_snapshot(event: &EngineEvent, symbol: &str) -> Option<MarketSnapshot> {
     match event {
-        EngineEvent::OrderBookUpdate {
-            best_bid,
-            best_ask,
-            ..
-        } => {
-            let spread = match (best_bid, best_ask) {
+        EngineEvent::OrderBookUpdate(snapshot) => {
+            let spread = match (snapshot.best_bid, snapshot.best_ask) {
                 (Some(bid), Some(ask)) => Some((ask - bid).to_string()),
                 _ => None,
             };
 
             Some(MarketSnapshot {
                 symbol: symbol.to_string(),
-                best_bid: best_bid.map(|p| p.to_string()),
-                best_ask: best_ask.map(|p| p.to_string()),
+                best_bid: snapshot.best_bid.map(|p| p.to_string()),
+                best_ask: snapshot.best_ask.map(|p| p.to_string()),
                 spread,
                 last_trade_price: None,
                 last_trade_quantity: None,
