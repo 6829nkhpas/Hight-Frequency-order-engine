@@ -11,8 +11,15 @@ class WebSocketService {
     private reconnectAttempts = 0;
     private reconnectInterval = 3000;
 
-    constructor(url: string = 'ws://localhost:3000/ws/market') {
-        this.url = url;
+    constructor(url?: string) {
+        // Use current host for WebSocket connection (works with Vite proxy)
+        if (!url) {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host; // includes port
+            this.url = `${protocol}//${host}/ws/market`;
+        } else {
+            this.url = url;
+        }
     }
 
     connect() {

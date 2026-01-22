@@ -32,7 +32,7 @@ export const PerformanceDashboard: React.FC = () => {
         try {
             console.log('🚀 Starting simulation with', numOrders, 'orders...');
 
-            const response = await fetch('http://localhost:3000/api/simulation', {
+            const response = await fetch('/api/simulation', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
