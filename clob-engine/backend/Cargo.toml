@@ -8,7 +8,7 @@ edition = "2021"
 tokio = { version = "1.40", features = ["full"] }
 
 # Web framework
-axum = { version = "0.7", features = ["ws"] }
+axum = { version = "0.7", features = ["ws", "macros"] }
 axum-extra = { version = "0.9", features = ["typed-header"] }
 tower = "0.4"
 tower-http = { version = "0.5", features = ["cors", "trace"] }
@@ -35,6 +35,9 @@ anyhow = "1.0"
 
 # Futures
 futures = "0.3"
+
+# Random number generation
+rand = "0.8"
 
 [dev-dependencies]
 tokio-test = "0.4"

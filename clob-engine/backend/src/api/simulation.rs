@@ -2,10 +2,9 @@
 
 use crate::engine::EngineHandle;
 use crate::simulation::Simulator;
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
 /// Request to start a simulation
 #[derive(Debug, Deserialize)]
@@ -26,14 +25,12 @@ pub struct SimulationResponse {
     pub metrics: Option<crate::simulation::PerformanceMetrics>,
 }
 
-/// Global simulator instance (shared state)
-pub type SimulatorState = Arc<Mutex<Option<Simulator>>>;
-
 /// Start a performance simulation
+#[axum::debug_handler]
 pub async fn run_simulation(
     State(handle): State<Arc<EngineHandle>>,
     Json(req): Json<SimulationRequest>,
-) -> impl IntoResponse {
+) -> Json<SimulationResponse> {
     // Create simulator
     let simulator = Simulator::new(handle);
     
@@ -46,12 +43,9 @@ pub async fn run_simulation(
     // Run simulation
     let metrics = simulator.run_simulation(config).await;
 
-    (
-        StatusCode::OK,
-        Json(SimulationResponse {
-            success: true,
-            message: format!("Simulation completed: {} orders processed", req.num_orders),
-            metrics: Some(metrics),
-        }),
-    )
+    Json(SimulationResponse {
+        success: true,
+        message: format!("Simulation completed: {} orders processed", req.num_orders),
+        metrics: Some(metrics),
+    })
 }

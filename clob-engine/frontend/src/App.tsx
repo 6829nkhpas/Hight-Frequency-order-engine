@@ -2,6 +2,7 @@ import { useMarketData } from './hooks/useMarketData';
 import { OrderBook } from './components/OrderBook';
 import { TradeTape } from './components/TradeTape';
 import { OrderForm } from './components/OrderForm';
+import { PerformanceDashboard } from './components/PerformanceDashboard';
 import { Activity, ShieldCheck, Zap } from 'lucide-react';
 import { cn } from './lib/utils';
 
@@ -51,7 +52,12 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-[1600px] mx-auto p-6 md:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-160px)] min-h-[700px]">
+        {/* Performance Dashboard - Full Width */}
+        <div className="mb-6">
+          <PerformanceDashboard />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[700px]">
           {/* Order Placement Panel */}
           <div className="lg:col-span-3 flex flex-col gap-6">
             <OrderForm />

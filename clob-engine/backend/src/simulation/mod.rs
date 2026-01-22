@@ -77,7 +77,8 @@ impl Simulator {
 
     /// Run a simulation with the given configuration
     pub async fn run_simulation(&self, config: SimulationConfig) -> PerformanceMetrics {
-        let mut rng = rand::thread_rng();
+        use rand::SeedableRng;
+        let mut rng = rand::rngs::StdRng::from_entropy();
         let start_time = Instant::now();
         let mut latencies = Vec::with_capacity(config.num_orders as usize);
         
@@ -103,15 +104,17 @@ impl Simulator {
             };
 
             // Random price around base price
+            let price_offset_range = (-500..=500); // Fixed range instead of using mantissa
             let price_offset = Decimal::new(
-                rng.gen_range(-config.price_variance.mantissa()..=config.price_variance.mantissa()),
+                rng.gen_range(price_offset_range),
                 config.price_variance.scale(),
             );
             let price = config.base_price + price_offset;
 
             // Random quantity
+            let quantity_range = (100..=10000); // Fixed range
             let quantity = Decimal::new(
-                rng.gen_range(config.min_quantity.mantissa()..=config.max_quantity.mantissa()),
+                rng.gen_range(quantity_range),
                 config.max_quantity.scale(),
             );
 
