@@ -10,8 +10,9 @@ mod api;
 mod broadcast;
 mod engine;
 mod persistence;
+mod simulation;
 
-use api::{get_order_book, health_check, submit_order, ws_handler};
+use api::{get_order_book, health_check, run_simulation, submit_order, ws_handler};
 use axum::{
     routing::{get, post},
     Router,
@@ -61,6 +62,7 @@ async fn main() {
         .route("/api/health", get(health_check))
         .route("/api/orders", post(submit_order))
         .route("/api/orderbook", get(get_order_book))
+        .route("/api/simulation", post(run_simulation))
         // WebSocket
         .route("/ws/market", get(ws_handler))
         .layer(cors)
